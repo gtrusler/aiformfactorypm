@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -5,7 +6,15 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./styles/globals.css",
   ],
+  darkMode: ["class"],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       screens: {
         mb: "1090px",
@@ -17,27 +26,59 @@ module.exports = {
         "4xs": "4px",
         "3xs": "8px",
         "2xs": "12px",
-
         xs: "16px",
         s: "24px",
         md: "32px",
         xl: "48px",
       },
       borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
         "2xs": "4px",
         xs: "8px",
-        sm: "12px",
-        md: "16px",
         pill: 500,
         none: 0,
       },
       colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
         content: {
           brand: "#3E00FA",
           "on-brand": "#FFFFFF",
           disabled: "#0000004D",
           secondary: "#64748B",
-          primary: "#020617",
           invert: "#FFFFFF",
           "invert-secondary": "#FFFFFFBF",
           "invert-disabled": "#FFFFFF66",
@@ -59,8 +100,6 @@ module.exports = {
           press: "#0000000D",
           hover: "#00000008",
           disabled: "#F1F5F9",
-          secondary: "#F1F5F9",
-          primary: "#FFFFFF",
           invert: "#020617",
           "invert-secondary": "#1E293B",
           "invert-disabled": "#334155",
@@ -93,26 +132,9 @@ module.exports = {
           brand: "#3E00FA",
           background: "#FFFFFF",
           overlay: "#000000BF",
-
-          // DOCS
           "sidebar-background": "#212121",
           "docs-content-background": "#0F0F0F",
-        },
-        border: {
-          success: "#10B981",
-          info: "#60A5FA",
-          warning: "#FACC15",
-          error: "#F87171",
-          brand: "#3E00FA",
-          secondary: "#00000033",
-          subdued: "#0000001A",
-          primary: "#00000066",
-          invert: "#FFFFFF40",
-          disabled: "#0000000D",
-          "brand-alt": "#3E00FA",
-          divider: "#0000001A",
-          "invert-disabled": "#FFFFFF1A",
-        },
+        }
       },
       boxShadow: {
         popover: "0px 4px 8px 0px rgba(190, 190, 190, 0.16)",
@@ -122,6 +144,8 @@ module.exports = {
           "linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82)",
       },
       animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
         opacity: "opacity 0.25s ease-in-out",
         appearFromRight: "appearFromRight 300ms ease-in-out",
         wiggle: "wiggle 1.5s ease-in-out infinite",
@@ -129,6 +153,14 @@ module.exports = {
         shimmer: "shimmer 3s ease-out infinite alternate",
       },
       keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
         opacity: {
           "0%": { opacity: 0 },
           "100%": { opacity: 1 },
@@ -163,33 +195,9 @@ module.exports = {
           "0%": { backgroundPosition: "0 50%" },
           "50%": { backgroundPosition: "100% 50%" },
           "100%": { backgroundPosition: "0% 50%" },
-        },
-      },
-    },
+        }
+      }
+    }
   },
-  plugins: [require("daisyui")],
-  daisyui: {
-    // Light & dark themes are added by default (it switches automatically based on OS settings)
-    // You can add another theme among the list of 30+
-    // Add "data-theme='theme_name" to any HTML tag to enable the 'theme_name' theme.
-    // https://daisyui.com/
-    themes: [
-      {
-        light: {
-          ...require("daisyui/src/theming/themes")["light"],
-          primary: "#3E00FA",
-          "base-100": "#F8FAFC",
-          "base-200": "white",
-        },
-      },
-      {
-        dark: {
-          ...require("daisyui/src/theming/themes")["dark"],
-          primary: "#3E00FA",
-          "base-100": "#14161D",
-          "base-200": "#191B23",
-        },
-      },
-    ],
-  },
-};
+  plugins: [require("tailwindcss-animate")]
+}
