@@ -83,7 +83,7 @@ const features: Feature[] = [
   {
     title: "Style",
     description:
-      "Components, animations & sections (like this features section), 20+ themes with daisyUI, automatic dark mode",
+      "Components, animations & sections (like this features section), beautiful UI components with shadcn/ui, automatic dark mode",
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -1,9 +1,9 @@
 "use client";
 import React, { createContext } from "react";
-import { fabric } from "fabric";
-import { CanvasOutput, SketchToLogoProps } from "@/types/canvas-types";
-import { SupabaseClient, User } from "@supabase/auth-helpers-nextjs";
-import { ConfigProps } from "@/types";
+import type { fabric } from "fabric";
+import type { CanvasOutput, SketchToLogoProps } from "@/types/canvas-types";
+import type { SupabaseClient, User } from "@supabase/auth-helpers-nextjs";
+import type { ConfigProps } from "@/types";
 
 export interface ICanvasContext {
   fabricCanvas: { current: fabric.Canvas };

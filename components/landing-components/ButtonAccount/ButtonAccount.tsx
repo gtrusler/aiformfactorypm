@@ -6,6 +6,8 @@ import { Popover, Transition } from "@headlessui/react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import apiClient from "@/libs/api";
 import config from "@/config";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // A button to show user some account actions
 //  1. Billing: open a Stripe Customer Portal to manage their billing (cancel subscription, update payment method, etc.).
@@ -21,7 +23,6 @@ const ButtonAccount = () => {
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
-
       setUser(data.user);
     };
 
@@ -65,7 +66,7 @@ const ButtonAccount = () => {
     <Popover className="relative z-10">
       {({ open }) => (
         <>
-          <Popover.Button className="btn">
+          <Popover.Button className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-md shadow-sm bg-background hover:bg-accent hover:text-accent-foreground">
             {user?.user_metadata?.avatar_url ? (
               <img
                 src={user?.user_metadata?.avatar_url}
@@ -76,7 +77,7 @@ const ButtonAccount = () => {
                 height={24}
               />
             ) : (
-              <span className="flex items-center justify-center w-8 h-8 capitalize rounded-full bg-base-100 shrink-0">
+              <span className="flex items-center justify-center w-8 h-8 text-foreground capitalize rounded-full bg-muted shrink-0">
                 {user?.email?.charAt(0)}
               </span>
             )}
@@ -86,15 +87,34 @@ const ButtonAccount = () => {
               "Account"}
 
             {isLoading ? (
-              <span className="loading loading-spinner loading-xs"></span>
+              <svg
+                className="w-4 h-4 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className={`w-5 h-5 duration-200 opacity-50 ${
-                  open ? "transform rotate-180 " : ""
-                }`}
+                className={cn("w-5 h-5 transition-transform duration-200", {
+                  "rotate-180": open,
+                })}
               >
                 <path
                   fillRule="evenodd"
@@ -113,10 +133,11 @@ const ButtonAccount = () => {
             leaveTo="transform scale-95 opacity-0"
           >
             <Popover.Panel className="absolute left-0 z-10 mt-3 w-screen max-w-[16rem] transform">
-              <div className="p-1 overflow-hidden shadow-xl rounded-xl ring-1 ring-base-content ring-opacity-5 bg-base-100">
-                <div className="space-y-0.5 text-sm">
-                  <button
-                    className="flex items-center gap-2 hover:bg-base-300 duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
+              <div className="overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
+                <div className="p-1">
+                  <Button
+                    variant="ghost"
+                    className="flex w-full items-center justify-start gap-2 px-2 py-1.5"
                     onClick={handleBilling}
                   >
                     <svg
@@ -132,9 +153,10 @@ const ButtonAccount = () => {
                       />
                     </svg>
                     Billing
-                  </button>
-                  <button
-                    className="flex items-center gap-2 hover:bg-error/20 hover:text-error duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="flex w-full items-center justify-start gap-2 px-2 py-1.5 text-destructive hover:bg-destructive/10"
                     onClick={handleSignOut}
                   >
                     <svg
@@ -155,7 +177,7 @@ const ButtonAccount = () => {
                       />
                     </svg>
                     Logout
-                  </button>
+                  </Button>
                 </div>
               </div>
             </Popover.Panel>

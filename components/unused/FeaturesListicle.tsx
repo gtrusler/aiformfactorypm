@@ -328,8 +328,8 @@ const features: {
       <>
         <ul className="space-y-2">
           {[
-            "Components, animations & sections (like the pricing page below)",
-            "20+ themes with daisyUI",
+            "Beautiful UI components with shadcn/ui",
+            "Modern and responsive design",
             "Automatic dark mode",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
@@ -451,8 +451,8 @@ const FeaturesListicle = () => {
           <div className="text-base-content/80 leading-relaxed mb-8 lg:text-lg">
             {/* 💡 COPY TIP: Explain how your product delivers what you promise in the headline. */}
             Login users, process payments and send emails at lightspeed. Spend
-            your time building your startup, not integrating APIs. Next Starter AI
-            provides you with the boilerplate code you need to launch, FAST.
+            your time building your startup, not integrating APIs. Next Starter
+            AI provides you with the boilerplate code you need to launch, FAST.
           </div>
         </div>
       </div>

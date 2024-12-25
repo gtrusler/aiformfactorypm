@@ -2,8 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    appDir: true,
-    esmExternals: "loose"
+    esmExternals: "loose",
   },
   images: {
     domains: [
@@ -15,7 +14,11 @@ const nextConfig = {
     ],
   },
   webpack: (config) => {
-    config.externals = [...config.externals, { canvas: "canvas" }];  // required to make Konva & react-konva work
+    config.externals = [
+      ...config.externals,
+      { canvas: "canvas" }, // required to make Konva & react-konva work
+      { fabric: "fabric" }, // required to make fabric.js work
+    ];
     return config;
   },
   async headers() {
@@ -24,8 +27,8 @@ const nextConfig = {
         source: "/",
         headers: [
           {
-            key: 'X-Robots-Tag',
-            value: 'index,follow',
+            key: "X-Robots-Tag",
+            value: "index,follow",
           },
         ],
       },
@@ -33,13 +36,13 @@ const nextConfig = {
         source: "/:path",
         headers: [
           {
-            key: 'X-Robots-Tag',
-            value: 'index,follow',
+            key: "X-Robots-Tag",
+            value: "index,follow",
           },
         ],
-      }
-    ]
-  }
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
