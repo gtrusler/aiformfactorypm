@@ -1,57 +1,46 @@
-import { NextResponse, NextRequest } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { createCustomerPortal } from "@/libs/stripe";
-import { createOrRetrieveCustomer } from "@/app/utils/stripe-supabase-admin";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import Stripe from "stripe";
 
-export async function POST(req: NextRequest) {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-08-16",
+});
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const body = await request.json();
+    const { customerId, returnUrl } = body;
 
-    const body = await req.json();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // User who are not logged in can't make a purchase
-    if (!user) {
+    if (!customerId) {
       return NextResponse.json(
-        { error: "You must be logged in to view billing information." },
-        { status: 401 }
+        { error: "Customer ID is required" },
+        { status: 400 }
       );
-    } else if (!body.returnUrl) {
+    }
+
+    if (!returnUrl) {
       return NextResponse.json(
         { error: "Return URL is required" },
         { status: 400 }
       );
     }
 
-    const customerId = await createOrRetrieveCustomer({
-      uuid: user.id || '',
-      email: user.email || ''
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
     });
 
-    if (!customerId) {
-      return NextResponse.json(
-        {
-          error: "You don't have a billing account yet. Make a purchase first.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const stripePortalUrl = await createCustomerPortal({
-      customerId,
-      returnUrl: body.returnUrl,
-    });
-
-    return NextResponse.json({
-      url: stripePortalUrl,
-    });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: e?.message }, { status: 500 });
+    return NextResponse.json({ url: session.url });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+      },
+      { status: 500 }
+    );
   }
 }

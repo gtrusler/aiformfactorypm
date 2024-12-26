@@ -1,23 +1,29 @@
-import { NextResponse, NextRequest } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// This route is used to store the leads that are generated from the landing page.
-// The API call is initiated by <ButtonLead /> component
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-
-  if (!body.email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
-  }
-
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    await supabase.from("leads").insert({ email: body.email });
+    const body = await request.json();
+    const { email } = body;
 
-    return NextResponse.json({});
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    // Add your lead capture logic here
+    // For example, saving to a database or sending to a CRM
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+      },
+      { status: 500 }
+    );
   }
 }

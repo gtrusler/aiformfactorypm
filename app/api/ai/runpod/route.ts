@@ -1,67 +1,56 @@
-import axios from "axios";
-import { NextResponse, NextRequest } from "next/server";
-import axiosRetry from "axios-retry";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export async function POST(req: NextRequest) {
-  const requestBody = await req.json();
-  const base64 = requestBody.image.replace(/^data:image\/\w+;base64,/, "");
-  let data = JSON.stringify({
-    // Modify the data object to match the request body of your API
-    input: {
-      image: base64,
-      prompt: requestBody.prompt,
-      seed: requestBody.seed,
-      style: requestBody.style,
-    },
-  });
-
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "#YOUR_RUNPOD_ENDPOINT#",
-    headers: {
-      Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    data: data,
+interface RunpodError {
+  response: {
+    data: unknown;
+    status: number;
   };
+}
 
-  axios.interceptors.response.use(
-    function (response) {
-      // Convert status code to 500 if 200 RESPONSE RETURNS "FAILED" or "IN_QUEUE" status to retry
-      if (
-        response.data.status === "FAILED" ||
-        response.data.status === "IN_QUEUE"
-      ) {
-        response.status = 500;
-        throw response;
-      }
-      response.status = 200;
-      return response;
-    },
-    function (error) {
-      return error;
-    }
+function isRunpodError(error: unknown): error is RunpodError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
   );
+}
 
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Custom retry delay
-    axiosRetry(axios, {
-      retryDelay: (retryCount) => {
-        return retryCount * 1;
-      },
-      retries: 15,
-    });
+    const body = await request.json();
+    const response = await fetch(
+      "https://api.runpod.ai/v2/stable-diffusion-v1/run",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
 
-    const result = await axios.request(config);
-    if (result.status === 200) {
-      return NextResponse.json(result.data);
-    } else {
-      return NextResponse.json(result.data, { status: result.status });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json(error.response.data, {
-      status: error.response.status,
-    });
+    if (isRunpodError(error)) {
+      return NextResponse.json(error.response.data, {
+        status: error.response.status,
+      });
+    }
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }
