@@ -2,154 +2,92 @@
 
 ## System Design
 
-### Frontend Architecture
+### Multi-Context Processing (MCP)
 
-```
-src/
-├── components/
-│   ├── app-components/     # Application-specific components
-│   │   └── Chat/          # Chat interface components
-│   ├── base/              # Base UI components
-│   └── landing-components/ # Landing page components
-├── hooks/                 # Custom React hooks
-├── lib/                   # Utility functions
-├── types/                 # TypeScript type definitions
-└── utils/                 # Helper functions
-```
+The system uses a Multi-Context Processing approach to enhance chat responses:
 
-### Backend Architecture
+1. **Vector Store**
 
-```
-app/
-├── api/
-│   ├── ai/               # AI service integrations
-│   │   ├── replicate/    # Replicate API
-│   │   └── runpod/      # RunPod API
-│   ├── stripe/          # Stripe payment processing
-│   │   ├── create-checkout/
-│   │   └── create-portal/
-│   └── webhook/         # Webhook handlers
-│       └── lemonsqueezy/
-└── chat/                # Chat interface pages
-```
+   - Uses Supabase with pgvector extension
+   - Stores document embeddings for efficient similarity search
+   - Maintains metadata for context tracking
+
+2. **Embedding Generation**
+
+   - Uses OpenAI's text-embedding-ada-002 model
+   - Generates embeddings for both documents and queries
+   - Handles batch processing for efficiency
+
+3. **Context Retrieval**
+
+   - Implements semantic search using vector similarity
+   - Configurable relevance thresholds
+   - Returns top matching documents
+
+4. **Chat Processing**
+   - Uses Claude 3.5 Sonnet model
+   - Enhances prompts with relevant context
+   - Maintains chat history in Supabase
 
 ## Data Flow
 
-### Chat System
-
-1. User sends message via ChatInterface
-2. Message processed by chat handler
-3. Tool execution if required
-4. Response rendered to user
-
-### Payment Processing
-
-1. User initiates payment
-2. Stripe/LemonSqueezy checkout created
-3. User completes payment
-4. Webhook received and processed
-5. User access updated
+1. User sends a message
+2. System generates embedding for the message
+3. Vector store returns relevant context
+4. Context is added to system prompt
+5. Enhanced prompt sent to Claude
+6. Response stored in chat history
 
 ## Components
 
-### Core Components
+### AnthropicClient
 
-- ChatInterface: Main chat interaction
-- MessageBubble: Message display
-- ToolExecutionStatus: Tool status display
+- Handles chat message processing
+- Manages context inclusion
+- Interfaces with Supabase
 
-### Payment Components
+### Vector Store
 
-- Stripe integration
-- LemonSqueezy integration
-- Webhook handlers
+- Stores document embeddings
+- Provides similarity search
+- Maintains document metadata
 
-### AI Components
+### Chat Interface
 
-- Replicate service integration
-- RunPod service integration
-- Tool execution framework
+- Handles user interactions
+- Displays messages and responses
+- Manages chat state
 
 ## Deployment
 
-### Current Environment
-
-- Local development
-- Next.js development server
-- Environment variables for API keys
-
-### Planned Infrastructure
-
-- Production deployment
-- Database integration
-- User authentication
-- Monitoring and logging
+- Next.js application on Vercel
+- Supabase for database and vector store
+- OpenAI for embeddings
+- Anthropic for chat responses
 
 ## Schema
 
-### Message Types
+### ai_knowledge_vectors
 
-```typescript
-type MessageRole = "user" | "assistant" | "system";
-
-interface Message {
-  role: MessageRole;
-  content: string;
-  metadata?: MessageMetadata;
-}
-
-interface MessageMetadata {
-  toolStatus?: ToolStatus;
-  toolType?: ToolType;
-  result?: unknown;
-  error?: boolean;
-  suggestions?: string[];
-  toolCalls?: Array<{
-    tool: ToolType;
-    status: ToolStatus;
-    result?: unknown;
-  }>;
-}
+```sql
+create table ai_knowledge_vectors (
+  id bigint primary key generated always as identity,
+  content text not null,
+  metadata jsonb,
+  embedding vector(1536),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 ```
 
-### Tool Types
+### chat_histories
 
-```typescript
-type ToolType =
-  | "code_search"
-  | "file_read"
-  | "terminal_command"
-  | "file_edit"
-  | "directory_list"
-  | "text_search"
-  | "file_search"
-  | "file_delete";
-
-type ToolStatus = "pending" | "complete" | "error";
-```
-
-### Payment Integration
-
-```typescript
-interface StripeCheckout {
-  priceId: string;
-  successUrl: string;
-  cancelUrl: string;
-  customerId?: string;
-}
-
-interface LemonSqueezyWebhook {
-  meta: {
-    custom_data: {
-      user_id: string;
-    };
-    event_name: string;
-  };
-  data: {
-    attributes: {
-      variant_id: number;
-      status: string;
-    };
-  };
-}
+```sql
+create table chat_histories (
+  id bigint primary key generated always as identity,
+  thread_id text not null,
+  speaker_id text not null,
+  message text not null,
+  metadata jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 ```
