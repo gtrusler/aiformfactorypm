@@ -13,6 +13,7 @@ interface ChatRequest {
   model?: string;
   context?: string[];
   includeContext?: boolean;
+  threadId?: string;
 }
 
 interface ContentItem {
@@ -160,6 +161,42 @@ export async function POST(request: Request) {
 
     const data = await response.json();
     console.log("Claude API response:", JSON.stringify(data, null, 2));
+
+    // Save assistant response to chat history if threadId is provided
+    if (body.threadId) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        console.log("Saving assistant response to chat history");
+
+        const content = data.content
+          .filter((item: ContentItem) => item.type === "text")
+          .map((item: ContentItem) => item.text)
+          .join("");
+
+        const { error: saveError } = await supabase
+          .from("chat_histories")
+          .insert([
+            {
+              thread_id: body.threadId,
+              speaker_id: "assistant",
+              message: content,
+              metadata: {
+                model: data.model,
+                usage: data.usage,
+              },
+            },
+          ]);
+
+        if (saveError) {
+          console.error("Failed to save assistant response:", saveError);
+        } else {
+          console.log("Successfully saved assistant response");
+        }
+      }
+    }
 
     // Transform the response to match our expected format
     if (data.content && Array.isArray(data.content)) {

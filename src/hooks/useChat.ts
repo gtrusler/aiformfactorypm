@@ -1,93 +1,127 @@
-import { useState } from "react";
-import type { Message, AIResponse, ChatContextType } from "@/types/chat";
+import { useState, useCallback } from "react";
+import type { Message, AIResponse } from "@/types/chat";
+import { AIMessageHandler } from "@/libs/ai/messageHandler";
+import type { ToolType } from "@/libs/ai/tools/types";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const simulateAIResponse = (message: Message): AIResponse => {
-  // Simulate processing delay
-  const content = message.content.toLowerCase();
-
-  if (content.includes("search") || content.includes("find")) {
-    return {
-      content: "Let me search for that information.",
-      metadata: {
-        toolCalls: [
-          {
-            tool: "code_search",
-            status: "pending",
-            result: { query: message.content },
-          },
-        ],
-      },
-    };
-  }
-
-  if (content.includes("file") || content.includes("read")) {
-    return {
-      content: "I will read that file for you.",
-      metadata: {
-        toolCalls: [
-          {
-            tool: "file_read",
-            status: "pending",
-            result: { path: "example/path.txt" },
-          },
-        ],
-      },
-    };
-  }
-
-  if (content.includes("run") || content.includes("execute")) {
-    return {
-      content: "I will execute that command.",
-      metadata: {
-        toolCalls: [
-          {
-            tool: "terminal_command",
-            status: "pending",
-            result: { command: 'echo "Hello World"' },
-          },
-        ],
-      },
-    };
-  }
-
-  // Default response for general messages
-  return {
-    content: `I received your message: "${message.content}". How can I help you further?`,
+// Tool handlers
+const toolHandlers: {
+  [key in ToolType]: {
+    handler: (
+      params: Record<string, unknown>
+    ) => Promise<{ content: string | string[] }>;
+    validateParams: (params: Record<string, unknown>) => boolean;
   };
+} = {
+  search: {
+    handler: async (params: Record<string, unknown>) => {
+      const query = params.query as string;
+      return { content: `Search results for: ${query}` };
+    },
+    validateParams: (params: Record<string, unknown>) => {
+      return typeof params.query === "string" && params.query.length > 0;
+    },
+  },
+  image: {
+    handler: async (params: Record<string, unknown>) => {
+      const prompt = params.prompt as string;
+      return { content: [`Generated image for: ${prompt}`] };
+    },
+    validateParams: (params: Record<string, unknown>) => {
+      return typeof params.prompt === "string" && params.prompt.length > 0;
+    },
+  },
+  webpage: {
+    handler: async (params: Record<string, unknown>) => {
+      const url = params.url as string;
+      return { content: `Content from webpage: ${url}` };
+    },
+    validateParams: (params: Record<string, unknown>) => {
+      return typeof params.url === "string" && params.url.startsWith("http");
+    },
+  },
 };
 
-export function useChat(): ChatContextType {
+const messageHandler = new AIMessageHandler({
+  availableTools: toolHandlers,
+  perplexityModel: process.env.NEXT_PUBLIC_PERPLEXITY_MODEL || "pplx-7b-online",
+  perplexityApiKey: process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY,
+});
+
+export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const supabase = createClientComponentClient();
 
-  const sendMessage = async (message: Message): Promise<AIResponse> => {
+  const saveMessage = async (
+    threadId: string,
+    speakerId: string,
+    content: string,
+    metadata: Record<string, unknown> = {}
+  ) => {
     try {
-      setIsLoading(true);
-      setError(null);
+      console.log("Saving message:", { threadId, speakerId, content });
+      const { data, error } = await supabase
+        .from("chat_histories")
+        .insert([
+          {
+            thread_id: threadId,
+            speaker_id: speakerId,
+            message: content,
+            metadata,
+          },
+        ])
+        .select();
 
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Randomly simulate errors for testing (10% chance)
-      if (Math.random() < 0.1) {
-        throw new Error("Simulated network error");
+      if (error) {
+        console.error("Failed to save message:", error);
+        throw error;
       }
 
-      const response = simulateAIResponse(message);
-      return response;
+      console.log("Message saved successfully:", data);
+      return data;
     } catch (err) {
-      const error =
-        err instanceof Error ? err : new Error("Failed to send message");
-      setError(error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      console.error("Error saving message:", err);
+      throw err;
     }
   };
 
+  const sendMessage = useCallback(
+    async (message: Message): Promise<AIResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Generate thread ID if not provided
+        const threadId = message.metadata?.threadId || crypto.randomUUID();
+
+        // Save user message
+        await saveMessage(threadId, "user", message.content, message.metadata);
+
+        // Process message with AI
+        const response = await messageHandler.processMessage(message.content);
+
+        // Save AI response
+        await saveMessage(threadId, "PM", response.content, response.metadata);
+
+        // Return response with PM role
+        return {
+          ...response,
+          role: "PM" as const,
+        };
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to process message");
+        setError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [supabase]
+  );
+
   return {
-    messages,
     isLoading,
     error,
     sendMessage,

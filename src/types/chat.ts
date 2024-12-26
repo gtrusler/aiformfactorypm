@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
 
-export type MessageRole = "user" | "assistant" | "system";
+export type MessageRole = "user" | "assistant" | "system" | "PM";
 
 export type ToolType =
+  | "search"
+  | "image"
+  | "webpage"
   | "code_search"
   | "file_read"
   | "terminal_command"
@@ -15,22 +18,20 @@ export type ToolType =
 export type ToolStatus = "pending" | "complete" | "error";
 
 export interface ToolResponse {
-  tool: ToolType;
-  result: unknown;
+  tool: string;
+  result: string | string[] | null;
   error?: string;
 }
 
 export interface MessageMetadata {
-  toolStatus?: ToolStatus;
-  toolType?: ToolType;
-  result?: unknown;
-  error?: boolean;
-  suggestions?: string[];
+  threadId?: string;
   toolCalls?: Array<{
-    tool: ToolType;
-    status: ToolStatus;
-    result?: unknown;
+    tool: string;
+    status: "complete" | "error";
+    result: string | string[] | null;
+    error?: string;
   }>;
+  [key: string]: unknown;
 }
 
 export interface Message {
@@ -40,15 +41,17 @@ export interface Message {
 }
 
 export interface AIResponse {
+  messageId: string;
   content: string;
-  toolResults?: ToolResponse[];
-  metadata?: {
-    toolCalls?: Array<{
-      tool: ToolType;
-      status: ToolStatus;
-      result?: unknown;
-    }>;
-  };
+  status: "completed" | "error";
+  role?: MessageRole;
+  metadata?: MessageMetadata;
+}
+
+export interface AIMessageHandlerConfig {
+  availableTools: Record<string, unknown>;
+  perplexityModel: string;
+  perplexityApiKey: string | undefined;
 }
 
 export interface ChatContextType {

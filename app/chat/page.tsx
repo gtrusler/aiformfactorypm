@@ -6,7 +6,7 @@ import type { Message, ToolType } from "@/types/chat";
 
 const INITIAL_MESSAGE: Message = {
   role: "assistant",
-  content: "Hello! I'm your AI assistant. How can I help you today?",
+  content: "Hello! I'm your AI project manager. How can I help you today?",
 };
 
 export default function ChatPage(): JSX.Element {
@@ -33,7 +33,7 @@ export default function ChatPage(): JSX.Element {
             <div className="bg-gray-50 border-b px-4 py-3">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full" />
-                <span className="text-sm font-medium">AI Assistant</span>
+                <span className="text-sm font-medium">PM</span>
               </div>
             </div>
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode, JSX } from "react";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Chat | AI Form Factory",
@@ -10,10 +10,10 @@ export default function ChatLayout({
   children,
 }: {
   children: ReactNode;
-}): JSX.Element {
+}): React.JSX.Element {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4">{children}</div>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col">{children}</div>
     </div>
   );
 }

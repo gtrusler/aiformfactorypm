@@ -2,60 +2,75 @@
 
 ## Goals
 
-- Create an AI-powered form creation and management system
-- Provide intuitive chat interface for form generation
-- Implement secure payment processing
-- Enable tool-based interactions for enhanced functionality
+- Create an AI-powered system for dynamic form generation and management
+- Implement intelligent form field detection and processing
+- Develop RAG-based chatbot for guided form completion
+- Enable automated document generation from form responses
+- Provide secure document storage and management
 
 ## Tech Stack
 
-### Frontend
+### Core Technologies
 
-- Next.js 14.2.21
-- TypeScript
-- React
-- Tailwind CSS
+- Frontend Framework: Next.js (React-based)
+- Language: TypeScript/JavaScript
+- Styling: Tailwind CSS
+- Authentication: Supabase Auth
+- Database: Supabase with pgvector
+- Vector Store: OpenAI Embeddings + Supabase pgvector
 
-### Backend
+### UI Components
 
-- Next.js API Routes
-- Stripe API
-- LemonSqueezy Integration
-- AI Services (Replicate, RunPod)
+- Headless UI for accessible components
+- TipTap for rich text editing
+- React Virtual for virtualized lists
+
+### AI Integration
+
+- Claude 3 Sonnet for chat interface
+- OpenAI ada-002 for embeddings
+- RAG implementation using pgvector
 
 ### Development Tools
 
-- ESLint
-- Prettier
-- TypeScript
-- Git
+- ESLint for code linting
+- TypeScript for type safety
+- Patch-package for dependency patching
+- Conda for environment management
+
+## Vector Store Implementation
+
+The project uses a hybrid approach for vector storage and retrieval:
+
+- OpenAI's text-embedding-ada-002 model for generating embeddings
+- Supabase's pgvector extension for similarity search
+- Server-side API endpoint for secure vector operations
+- Client-side integration through message handler
+
+### Sample Templates
+
+Current document templates in vector store:
+
+1. Waiver of Service
+   - Civil proceedings document
+   - Handles service of process acknowledgment
+2. Power of Attorney
+   - Financial and legal decisions
+   - Agent designation and powers
+3. Last Will and Testament
+   - Estate planning document
+   - Beneficiary and executor management
 
 ## Resources and URLs
 
-- Local Development: http://localhost:3000
+- Development: http://localhost:3000
 - Chat Interface: http://localhost:3000/chat
-- API Routes:
-  - /api/stripe/\*: Stripe payment processing
-  - /api/webhook/lemonsqueezy: LemonSqueezy webhooks
-  - /api/ai/\*: AI service integrations
+- Supabase Dashboard: https://app.supabase.com
+- OpenAI Dashboard: https://platform.openai.com
+- Anthropic Console: https://console.anthropic.com
 
 ## Team
 
-- Development Team
-  - Frontend Developers
-  - Backend Developers
-  - UI/UX Designers
-
-## Current Status
-
-- Basic chat interface implemented
-- Payment processing routes in place
-- AI service integrations added
-- Core components developed
-
-## Next Steps
-
-1. Complete tool integrations
-2. Implement full payment flow
-3. Add user authentication
-4. Develop form generation
+- Project Manager: Claude AI
+- Development: Cursor AI
+- Infrastructure: Supabase

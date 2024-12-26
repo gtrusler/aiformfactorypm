@@ -6,55 +6,64 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Chat interface implementation
+- Multi-Context Processing (MCP) features
+  - Supabase vector store integration
+  - Context-aware chat responses
+  - Document relevance scoring
+  - Vector search functionality
+- Chat interface enhancements
   - Interactive message input
   - Message history display
   - Agent responses
   - Tool execution framework
-- API Routes for payment processing
-  - Stripe integration
-  - LemonSqueezy webhook handling
 - AI service integrations
+  - Claude 3 Sonnet model integration
   - Replicate API integration
   - RunPod API integration
-- Landing page components
-  - Chat showcase
-  - Feature demonstrations
+- Payment processing setup
+  - Stripe integration
+  - LemonSqueezy webhook handling
 - Base UI components
   - Message bubbles
   - Tool execution status
   - Loading indicators
-- Multi-Context Processing (MCP) integration with Supabase vector store
-- Updated Claude model to `claude-3-5-sonnet-20241022`
-- Enhanced chat interface with context-aware responses
-- Vector search functionality for relevant document retrieval
+  - Chat showcase components
+- Vector store integration for enhanced chatbot context
+  - Implemented VectorStore class for document embeddings and retrieval
+  - Created server-side API endpoint for vector operations
+  - Added sample legal document templates (Waiver of Service, Power of Attorney, Last Will and Testament)
+  - Integrated vector search with Claude chat interface
 
 ### Changed
 
-- Improved chat interface implementation
-  - Fixed input field interactivity
+- Updated Claude model to `claude-3-sonnet-20240229`
+- Enhanced chat interface implementation
+  - Improved input field interactivity
   - Better layout and styling
   - Enhanced message handling
-- Enhanced error handling in API routes
+- Improved error handling
   - Type-safe error responses
   - Consistent error formats
   - Better error messages
-- Updated AnthropicClient to support MCP capabilities
-- Modified chat API route to handle context inclusion
-- Improved test script for MCP verification
+- Enhanced AnthropicClient with MCP capabilities
+- Modified chat API routes for context inclusion
+- Updated message handler to include relevant context from vector store
+- Moved vector operations to server-side to protect API keys
 
 ### Fixed
 
-- Chat input field interactivity issues
-- Message handling in chat interface
+- Chat interface interactivity issues
+- Message handling and display
 - API route error handling
-- Tool execution framework
-- Resolved model compatibility issues
-- Enhanced error handling in API routes
-- Fixed test script execution in development environment
+- Tool execution framework reliability
+- Model compatibility issues
+- Test script execution in development
+- Resolved client-side Supabase key issues
+- Fixed vector store context retrieval in chat interface
 
 ### Security
 
-- Added type safety for API responses
-- Improved error handling for webhooks
-- Secure payment processing setup
+- Enhanced type safety for API responses
+- Improved webhook error handling
+- Secure payment processing implementation
+- Vector store access policies

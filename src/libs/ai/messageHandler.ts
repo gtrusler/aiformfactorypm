@@ -1,128 +1,161 @@
-import type {
-  ChatMessage,
-  ToolCall,
-  ChatMessageMetadata,
-  ToolType,
-  AIResponse,
-} from "../../types/chat";
+import type { AIResponse } from "../../types/chat";
+import { PerplexityClient, AnthropicClient } from "../api";
+import type { VectorSearchResult } from "./vectorStore";
 
 export interface AIMessageHandlerConfig {
-  availableTools: {
-    [key in ToolType]: {
-      handler: (params: Record<string, unknown>) => Promise<unknown>;
-      validateParams: (params: Record<string, unknown>) => boolean;
-    };
-  };
+  perplexityApiKey?: string;
+  anthropicApiKey?: string;
 }
 
 export class AIMessageHandler {
   private config: AIMessageHandlerConfig;
+  private perplexityClient: PerplexityClient;
+  private anthropicClient: AnthropicClient;
+  private readonly systemPrompt = `You are an AI project manager and system architect specializing in document generation systems. Your task is to create a detailed project plan for developing a form document generation system with an integrated RAG chatbot. You will break down the project into manageable phases and provide instructions for AI coding agents (such as Windsurf AI or Cursor AI) to implement each phase.
+
+Project Overview:
+AI Form Factory: An intelligent document automation system that combines AI-powered form generation with advanced processing capabilities.
+
+## Goals
+- Create an AI-powered system for dynamic form generation and management
+- Implement intelligent form field detection and processing
+- Develop RAG-based chatbot for guided form completion
+- Enable automated document generation from form responses
+- Provide secure document storage and management
+
+Tech Stack:
+- Frontend Framework: Next.js (React-based)
+- Language: TypeScript/JavaScript
+- Styling: Tailwind CSS
+- Authentication: Supabase Auth
+- Database: Supabase
+- UI Components:
+  - Headless UI for accessible components
+  - TipTap for rich text editing
+  - React Virtual for virtualized lists
+- Cloud Services: AWS SDK integration
+- Development Tools:
+  - ESLint for code linting
+  - TypeScript for type safety
+  - Patch-package for dependency patching
+
+The project uses conda for environment management as it works better with Windsurf AI and Cursor AI.
+
+Additionally, the project incorporates Docassemble, an open-source document generation platform, for document templating and generation.
+
+Core MVP Features:
+- User authentication (using Supabase Auth)
+- Basic form interface for collecting: Name, Phone, Email
+- Chatbot interface (leveraging Claude/OpenAI integration)
+- Document generation from collected data
+- Database storage (using Supabase)
+
+Advanced Features (Post-MVP):
+- Complex template management
+- Template conversion system
+- Support for variable data structures
+- Vector store for enhanced chatbot knowledge
+
+Technical Requirements:
+- Multi-user system
+- Secure file storage (using Cloudflare R2)
+- Rate limiting
+- Usage tracking
+- Type safety (using TypeScript)
+
+Template System Requirements:
+- Handle specific coding patterns (P####, A####, PA###)
+- Support conditional logic in templates
+- Import capability for existing templates
+- Flexible data structure for simple and complex fields
+
+Your role is to work with Graydon to determine the next appropriate deliverable and provide instructions to the coding AI (Windsurf AI or Cursor AI). You will assist in troubleshooting and completing each deliverable until it meets the requirements.`;
 
   constructor(config: AIMessageHandlerConfig) {
     this.config = config;
+    this.perplexityClient = new PerplexityClient({
+      apiKey: config.perplexityApiKey,
+    });
+    this.anthropicClient = new AnthropicClient({
+      apiKey: config.anthropicApiKey,
+      model: "claude-3-sonnet-20240229",
+    });
   }
 
-  async processMessage(message: string): Promise<{
-    response: string;
-    toolCalls?: ToolCall[];
-    metadata?: ChatMessageMetadata;
-  }> {
+  private async getRelevantContext(message: string): Promise<string> {
     try {
-      // 1. Analyze message to determine required tools
-      const requiredTools = await this.analyzeMessage(message);
+      const response = await fetch("/api/vector", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: message }),
+      });
 
-      // 2. Execute tool calls if needed
-      const toolCalls: ToolCall[] = [];
-      if (requiredTools.length > 0) {
-        for (const tool of requiredTools) {
-          const result = await this.executeToolCall(tool);
-          toolCalls.push(result);
-        }
+      if (!response.ok) {
+        throw new Error("Failed to fetch context");
       }
 
-      // 3. Generate AI response based on tool results
-      const aiResponse = await this.generateResponse(message, toolCalls);
+      const { results } = (await response.json()) as {
+        results: VectorSearchResult[];
+      };
+
+      if (!results?.length) return "";
+
+      // Format context for the AI
+      const context = results
+        .map(
+          (doc) =>
+            `Context from ${doc.metadata.source || "document"}:\n${doc.content}`
+        )
+        .join("\n\n");
+
+      return `\nRelevant context for your reference:\n${context}\n`;
+    } catch (error) {
+      console.error("Error retrieving context:", error);
+      return "";
+    }
+  }
+
+  async processMessage(message: string): Promise<AIResponse> {
+    try {
+      // Get relevant context from vector store
+      const context = await this.getRelevantContext(message);
+
+      // Combine user message with context
+      const enhancedMessage = context ? `${message}\n\n${context}` : message;
+
+      const aiResponse = await this.anthropicClient.createMessage({
+        messages: [
+          {
+            role: "user",
+            content: enhancedMessage,
+          },
+        ],
+        system: this.systemPrompt,
+        model: "claude-3-sonnet-20240229",
+      });
+
+      // Extract the text content from the response
+      const content =
+        typeof aiResponse.content === "string"
+          ? aiResponse.content
+          : aiResponse.content.text ||
+            "I encountered an error processing your request.";
 
       return {
-        response: aiResponse.content,
-        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
-        metadata: {
-          toolCalls,
-          aiResponse,
-        },
+        messageId: crypto.randomUUID(),
+        content,
+        status: "completed",
       };
     } catch (error) {
       console.error("Error processing message:", error);
-      throw error;
-    }
-  }
-
-  async executeToolCall(tool: ToolCall): Promise<ToolCall> {
-    try {
-      // 1. Validate tool exists
-      if (!this.config.availableTools[tool.type]) {
-        throw new Error(`Tool ${tool.type} not available`);
-      }
-
-      // 2. Validate params
-      if (!this.config.availableTools[tool.type].validateParams(tool.input)) {
-        throw new Error(`Invalid parameters for tool ${tool.type}`);
-      }
-
-      // 3. Execute tool
-      const result = await this.config.availableTools[tool.type].handler(
-        tool.input
-      );
-
       return {
-        ...tool,
-        status: "completed",
-        output: { result },
-      };
-    } catch (error) {
-      return {
-        ...tool,
+        messageId: crypto.randomUUID(),
+        content:
+          "I encountered an error while processing your request. Please try again.",
         status: "error",
-        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
-  }
-
-  private async analyzeMessage(message: string): Promise<ToolCall[]> {
-    // Implement message analysis logic to determine required tools
-    // This could use NLP or pattern matching to identify tool requirements
-    const tools: ToolCall[] = [];
-
-    // Example analysis (replace with actual implementation)
-    if (message.toLowerCase().includes("search")) {
-      tools.push({
-        id: crypto.randomUUID(),
-        type: "search",
-        status: "pending",
-        input: { query: message },
-      });
-    }
-
-    return tools;
-  }
-
-  private async generateResponse(
-    message: string,
-    toolCalls: ToolCall[]
-  ): Promise<AIResponse> {
-    // Implement response generation logic using tool results
-    // This could use a language model to generate coherent responses
-
-    const toolResults = toolCalls
-      .filter((tool) => tool.status === "completed")
-      .map((tool) => tool.output)
-      .join("\n");
-
-    return {
-      messageId: crypto.randomUUID(),
-      content: `Processed message with ${toolCalls.length} tool calls.\n${toolResults}`,
-      toolCalls,
-      status: "completed",
-    };
   }
 }

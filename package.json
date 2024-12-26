@@ -7,7 +7,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:test": "tsc -p tsconfig.test.json",
+    "test:mcp": "npm run build:test && node -r dotenv/config src/scripts/test-mcp.js",
+    "test:supabase": "vitest run tests/supabase/integration.test.ts"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",
@@ -65,7 +68,9 @@
     "next-plausible": "^3.11.3",
     "next-sitemap": "^4.2.2",
     "nextjs-toploader": "^1.4.2",
+    "node-fetch": "^2.7.0",
     "nodemailer": "^6.9.4",
+    "openai": "^4.77.0",
     "patch-package": "^8.0.0",
     "react": "18.2.0",
     "react-colorful": "^5.6.1",
@@ -107,10 +112,14 @@
     "@types/react-dom": "^18.2.7",
     "@types/react-gtm-module": "^2.0.3",
     "@types/react-syntax-highlighter": "^15.5.7",
+    "@vitest/coverage-v8": "^2.1.8",
     "autoprefixer": "^10.4.15",
+    "dotenv": "^16.4.7",
     "postcss": "^8.4.28",
     "tailwindcss": "^3.3.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
-    "uglify-js": "3.17.4"
+    "uglify-js": "3.17.4",
+    "vitest": "^1.6.0"
   }
 }
