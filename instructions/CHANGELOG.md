@@ -33,6 +33,11 @@ All notable changes to this project will be documented in this file.
   - Created server-side API endpoint for vector operations
   - Added sample legal document templates (Waiver of Service, Power of Attorney, Last Will and Testament)
   - Integrated vector search with Claude chat interface
+- File upload functionality in chat interface
+  - Support for image and text file uploads
+  - Preview attachments before sending
+  - Display attachments in chat history
+  - Type-safe implementation with proper error handling
 
 ### Changed
 
