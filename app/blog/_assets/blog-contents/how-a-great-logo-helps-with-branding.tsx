@@ -22,11 +22,12 @@ const content = {
   description:
     "Learn how a great logo helps with branding and how to create a such logo with Sketch Logo AI.",
   // An array of categories of the article. It's used to generate the category badges, the category filter, and more.
-  categories: [
-    categories.find((category) => category.slug === categorySlugs.feature),
-  ],
+  categories: categories.filter(
+    (category) => category.slug === categorySlugs.feature
+  ),
   // The author of the article. It's used to generate a link to the author's bio page.
-  author: authors.find((author) => author.slug === authorSlugs.oliver),
+  author:
+    authors.find((author) => author.slug === authorSlugs.oliver) ?? authors[0],
   // The date of the article. It's used to generate the meta date.
   publishedAt: "2024-01-25",
   image: {

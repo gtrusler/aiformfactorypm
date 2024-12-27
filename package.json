@@ -82,6 +82,7 @@
     "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.12.0",
+    "react-markdown": "^9.0.1",
     "react-popper": "^2.3.0",
     "react-slider": "^2.0.6",
     "react-syntax-highlighter": "^15.5.0",
@@ -100,6 +101,7 @@
   },
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
+    "@tailwindcss/typography": "^0.5.15",
     "@types/aos": "^3.0.7",
     "@types/fabric": "^5.3.6",
     "@types/fontfaceobserver": "^2.1.3",

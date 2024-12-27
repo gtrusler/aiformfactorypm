@@ -44,8 +44,6 @@ const toolHandlers: {
 
 const messageHandler = new AIMessageHandler({
   availableTools: toolHandlers,
-  perplexityModel: process.env.NEXT_PUBLIC_PERPLEXITY_MODEL || "pplx-7b-online",
-  perplexityApiKey: process.env.NEXT_PUBLIC_PERPLEXITY_API_KEY,
 });
 
 export function useChat() {
@@ -53,38 +51,41 @@ export function useChat() {
   const [error, setError] = useState<Error | null>(null);
   const supabase = createClientComponentClient();
 
-  const saveMessage = async (
-    threadId: string,
-    speakerId: string,
-    content: string,
-    metadata: Record<string, unknown> = {}
-  ) => {
-    try {
-      console.log("Saving message:", { threadId, speakerId, content });
-      const { data, error } = await supabase
-        .from("chat_histories")
-        .insert([
-          {
-            thread_id: threadId,
-            speaker_id: speakerId,
-            message: content,
-            metadata,
-          },
-        ])
-        .select();
+  const saveMessage = useCallback(
+    async (
+      threadId: string,
+      speakerId: string,
+      content: string,
+      metadata: Record<string, unknown> = {}
+    ) => {
+      try {
+        console.log("Saving message:", { threadId, speakerId, content });
+        const { data, error } = await supabase
+          .from("chat_histories")
+          .insert([
+            {
+              thread_id: threadId,
+              speaker_id: speakerId,
+              message: content,
+              metadata,
+            },
+          ])
+          .select();
 
-      if (error) {
-        console.error("Failed to save message:", error);
-        throw error;
+        if (error) {
+          console.error("Failed to save message:", error);
+          throw error;
+        }
+
+        console.log("Message saved successfully:", data);
+        return data;
+      } catch (err) {
+        console.error("Error saving message:", err);
+        throw err;
       }
-
-      console.log("Message saved successfully:", data);
-      return data;
-    } catch (err) {
-      console.error("Error saving message:", err);
-      throw err;
-    }
-  };
+    },
+    [supabase]
+  );
 
   const sendMessage = useCallback(
     async (message: Message): Promise<AIResponse> => {
@@ -99,7 +100,10 @@ export function useChat() {
         await saveMessage(threadId, "user", message.content, message.metadata);
 
         // Process message with AI
-        const response = await messageHandler.processMessage(message.content);
+        const response = await messageHandler.processMessage(
+          message.content,
+          threadId
+        );
 
         // Save AI response
         await saveMessage(threadId, "PM", response.content, response.metadata);
@@ -118,7 +122,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [supabase]
+    [saveMessage, setError, setIsLoading]
   );
 
   return {

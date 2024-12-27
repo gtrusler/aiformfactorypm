@@ -4,10 +4,10 @@ import config from "@/config";
 
 // This route is used to receive emails from Mailgun and forward them to our customer support email.
 // See more: https://nextstarter.ai/docs/features/email
-export async function POST(req: NextRequest) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     // extract the email content, subject and sender
-    const formData = await req.formData();
+    const formData = await request.formData();
     const sender = formData.get("From");
     const subject = formData.get("Subject");
     const html = formData.get("body-html");
@@ -23,8 +23,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({});
-  } catch (e) {
-    console.error(e?.message);
-    return NextResponse.json({ error: e?.message }, { status: 500 });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    console.error(errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

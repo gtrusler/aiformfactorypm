@@ -1,44 +1,71 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import type { Message } from "@/types/chat";
 import { cn } from "@/lib/utils";
+import type { Components } from "react-markdown";
 
 interface MessageBubbleProps {
   message: Message;
-  className?: string;
+}
+
+interface CodeProps extends React.HTMLAttributes<HTMLElement> {
+  inline?: boolean;
 }
 
 export function MessageBubble({
   message,
-  className,
 }: MessageBubbleProps): React.JSX.Element {
-  const isAI = message.role === "assistant";
-  const isSystem = message.role === "system";
+  const isUser = message.role === "user";
+  const isError = message.metadata?.error === true;
+
+  const components: Components = {
+    pre: ({ children }) => (
+      <pre className="rounded-md bg-gray-800 p-4 overflow-x-auto">
+        {children}
+      </pre>
+    ),
+    code: ({ inline, className, children, ...props }: CodeProps) => {
+      if (inline) {
+        return (
+          <code className="rounded bg-gray-200 px-1 py-0.5" {...props}>
+            {children}
+          </code>
+        );
+      }
+      return (
+        <code className={cn("text-sm", className)} {...props}>
+          {children}
+        </code>
+      );
+    },
+  };
 
   return (
-    <div
-      className={cn(
-        "flex",
-        {
-          "justify-start": isAI || isSystem,
-          "justify-end": !isAI && !isSystem,
-        },
-        className
-      )}
-    >
+    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
       <div
-        className={cn("max-w-[70%] rounded-lg p-4", {
-          "bg-gray-100": isAI,
-          "bg-yellow-50": isSystem,
-          "bg-blue-100": !isAI && !isSystem,
-        })}
-      >
-        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-
-        {message.metadata?.error && (
-          <div className="text-xs text-red-500 mt-2">
-            Error occurred during processing
-          </div>
+        className={cn(
+          "max-w-[80%] rounded-lg px-4 py-2",
+          isUser ? "bg-blue-500 text-white" : "bg-gray-100",
+          isError && "bg-red-100 text-red-800"
         )}
+      >
+        <ReactMarkdown
+          className={cn(
+            "prose prose-sm max-w-none",
+            isUser && "prose-invert",
+            !isUser && [
+              "prose-headings:text-gray-800",
+              "prose-p:text-gray-600",
+              "prose-strong:text-gray-800",
+              "prose-code:text-gray-800",
+              "prose-pre:bg-gray-800",
+              "prose-pre:text-gray-100",
+            ]
+          )}
+          components={components}
+        >
+          {message.content}
+        </ReactMarkdown>
       </div>
     </div>
   );

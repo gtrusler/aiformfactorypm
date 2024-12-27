@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/base/Spinner";
 import { MessageBubble } from "./MessageBubble";
 import { ToolExecutionStatus } from "./ToolExecutionStatus";
-import { Plus, File, Image, X } from "lucide-react";
+import { Plus, File, Image as LucideImage, X } from "lucide-react";
+import Image from "next/image";
 
 interface FileAttachment {
   type: "image" | "text";
@@ -262,11 +263,15 @@ export function ChatInterface({
               {attachments?.map((attachment, attachmentIndex) => (
                 <div key={attachmentIndex} className="mt-2">
                   {attachment.type === "image" ? (
-                    <img
-                      src={attachment.content}
-                      alt={attachment.name}
-                      className="max-w-xs rounded-md"
-                    />
+                    <div className="max-w-xs rounded-md overflow-hidden">
+                      <Image
+                        src={attachment.content}
+                        alt={attachment.name}
+                        width={300}
+                        height={200}
+                        className="w-full h-auto"
+                      />
+                    </div>
                   ) : (
                     <div className="bg-gray-100 p-2 rounded-md">
                       <p className="font-mono text-sm">{attachment.name}</p>
@@ -294,11 +299,7 @@ export function ChatInterface({
                 key={index}
                 className="flex items-center gap-1 bg-gray-100 p-1 rounded"
               >
-                {file.type === "image" ? (
-                  <Image className="w-4 h-4" />
-                ) : (
-                  <File className="w-4 h-4" />
-                )}
+                <File className="w-4 h-4" />
                 <span className="text-sm">{file.name}</span>
                 <button
                   type="button"

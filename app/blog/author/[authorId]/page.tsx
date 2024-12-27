@@ -4,6 +4,8 @@ import CardArticle from "../../_assets/components/CardArticle";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
 import { authors } from "../../_assets/constants";
+import { notFound } from "next/navigation";
+import type { authorType } from "@/app/blog/_assets/constants";
 
 export async function generateMetadata({
   params,
@@ -12,6 +14,10 @@ export async function generateMetadata({
 }) {
   const author = authors.find((author) => author.slug === params.authorId);
 
+  if (!author) {
+    notFound();
+  }
+
   return getSEOTags({
     title: `${author.name}, Author at ${config.appName}'s Blog`,
     description: `${author.name}, Author at ${config.appName}'s Blog`,
@@ -19,12 +25,20 @@ export async function generateMetadata({
   });
 }
 
-export default async function Author({
+export default function AuthorPage({
   params,
 }: {
   params: { authorId: string };
 }) {
   const author = authors.find((author) => author.slug === params.authorId);
+
+  if (!author) {
+    notFound();
+  }
+
+  // TypeScript now knows author is defined after the notFound() check
+  const typedAuthor: authorType = author;
+
   const articlesByAuthor = articles
     .filter((article) => article.author.slug === author.slug)
     .sort(
@@ -50,23 +64,22 @@ export default async function Author({
 
         <div className="max-md:order-first flex md:flex-col gap-4 shrink-0">
           <Image
-            src={author.avatar}
+            src={typedAuthor.avatar}
             width={256}
             height={256}
-            alt={author.name}
+            alt={typedAuthor.name}
             priority={true}
             className="rounded-box w-[12rem] md:w-[16rem] "
           />
 
-          {author.socials?.length > 0 && (
+          {typedAuthor.socials && typedAuthor.socials.length > 0 && (
             <div className="flex flex-col md:flex-row gap-4">
-              {author.socials.map((social) => (
+              {typedAuthor.socials.map((social) => (
                 <a
                   key={social.name}
                   href={social.url}
                   className="btn btn-square"
-                  // Using a dark theme? -> className="btn btn-square btn-neutral"
-                  title={`Go to ${author.name} profile on ${social.name}`}
+                  title={`Go to ${typedAuthor.name} profile on ${social.name}`}
                   target="_blank"
                 >
                   {social.icon}

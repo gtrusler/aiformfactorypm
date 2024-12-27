@@ -38,6 +38,10 @@ All notable changes to this project will be documented in this file.
   - Preview attachments before sending
   - Display attachments in chat history
   - Type-safe implementation with proper error handling
+- Enhanced chat history functionality
+  - Improved message deduplication
+  - Better context handling in conversations
+  - Explicit system prompts for chat history awareness
 
 ### Changed
 
@@ -63,6 +67,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Chat history retrieval and context issues
+  - Resolved message duplication in chat history
+  - Fixed system prompt overrides
+  - Improved chat history integration with Claude
 - Chat interface interactivity issues
 - Message handling and display
 - API route error handling
@@ -78,3 +86,6 @@ All notable changes to this project will be documented in this file.
 - Improved webhook error handling
 - Secure payment processing implementation
 - Vector store access policies
+- Protected API keys in server-side operations
+- Improved error handling for sensitive operations
+- Enhanced data validation and sanitization

@@ -5,13 +5,19 @@ import BadgeCategory from "../_assets/components/BadgeCategory";
 import Avatar from "../_assets/components/Avatar";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
+import { notFound } from "next/navigation";
+import type { articleType } from "@/types/article";
 
 export async function generateMetadata({
   params,
 }: {
   params: { articleId: string };
 }) {
-  const article = articles.find((article) => article.slug === params.articleId);
+  const article = articles.find((a) => a.slug === params.articleId);
+
+  if (!article) {
+    notFound();
+  }
 
   return getSEOTags({
     title: article.title,
@@ -36,12 +42,20 @@ export async function generateMetadata({
   });
 }
 
-export default async function Article({
+export default function BlogArticle({
   params,
 }: {
   params: { articleId: string };
 }) {
-  const article = articles.find((article) => article.slug === params.articleId);
+  const article = articles.find((a) => a.slug === params.articleId);
+
+  if (!article) {
+    notFound();
+  }
+
+  // TypeScript now knows article is defined after the notFound() check
+  const typedArticle: articleType = article;
+
   const articlesRelated = articles
     .filter(
       (a) =>
@@ -61,24 +75,24 @@ export default async function Article({
       {/* SCHEMA JSON-LD MARKUP FOR GOOGLE */}
       <Script
         type="application/ld+json"
-        id={`json-ld-article-${article.slug}`}
+        id={`json-ld-article-${typedArticle.slug}`}
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Article",
             mainEntityOfPage: {
               "@type": "WebPage",
-              "@id": `https://${config.domainName}/blog/${article.slug}`,
+              "@id": `https://${config.domainName}/blog/${typedArticle.slug}`,
             },
-            name: article.title,
-            headline: article.title,
-            description: article.description,
-            image: `https://${config.domainName}${article.image.urlRelative}`,
-            datePublished: article.publishedAt,
-            dateModified: article.publishedAt,
+            name: typedArticle.title,
+            headline: typedArticle.title,
+            description: typedArticle.description,
+            image: `https://${config.domainName}${typedArticle.image.urlRelative}`,
+            datePublished: typedArticle.publishedAt,
+            dateModified: typedArticle.publishedAt,
             author: {
               "@type": "Person",
-              name: article.author.name,
+              name: typedArticle.author.name,
             },
           }),
         }}
@@ -111,7 +125,7 @@ export default async function Article({
         {/* HEADER WITH CATEGORIES AND DATE AND TITLE */}
         <section className="my-12 md:my-20 max-w-[800px]">
           <div className="flex items-center gap-4 mb-6">
-            {article.categories.map((category) => (
+            {typedArticle.categories.map((category) => (
               <BadgeCategory
                 category={category}
                 key={category.slug}
@@ -119,7 +133,7 @@ export default async function Article({
               />
             ))}
             <span className="text-base-content/80" itemProp="datePublished">
-              {new Date(article.publishedAt).toLocaleDateString("en-US", {
+              {new Date(typedArticle.publishedAt).toLocaleDateString("en-US", {
                 month: "long",
                 day: "numeric",
                 year: "numeric",
@@ -128,11 +142,11 @@ export default async function Article({
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 md:mb-8">
-            {article.title}
+            {typedArticle.title}
           </h1>
 
           <p className="text-base-content/80 md:text-lg max-w-[700px]">
-            {article.description}
+            {typedArticle.description}
           </p>
         </section>
 
@@ -142,7 +156,7 @@ export default async function Article({
             <p className="text-base-content/80 text-sm mb-2 md:mb-3">
               Posted by
             </p>
-            <Avatar article={article} />
+            <Avatar article={typedArticle} />
 
             {articlesRelated.length > 0 && (
               <div className="hidden md:block mt-12">
@@ -174,7 +188,7 @@ export default async function Article({
 
           {/* ARTICLE CONTENT */}
           <section className="w-full max-md:pt-4 md:pr-20 space-y-12 md:space-y-20">
-            {article.content}
+            {typedArticle.content}
           </section>
         </div>
       </article>

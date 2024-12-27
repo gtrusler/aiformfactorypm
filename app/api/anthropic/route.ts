@@ -49,6 +49,55 @@ export async function POST(request: Request) {
       includeContext,
     } = body as ChatRequest;
 
+    // Get chat history from Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      console.log("Fetching complete chat history");
+
+      const { data: historyData, error: historyError } = await supabase
+        .from("chat_histories")
+        .select("*")
+        .order("created_at", { ascending: true })
+        .limit(50);
+
+      if (historyError) {
+        console.error("Failed to fetch chat history:", historyError);
+      } else if (historyData) {
+        // Create a Set to track unique message identifiers (content + role)
+        const seenMessages = new Set(
+          messages.map((m) => `${m.role}:${m.content.substring(0, 100)}`)
+        );
+
+        const chatHistory = historyData
+          .filter((item) => {
+            const role = (
+              item.speaker_id === "assistant" || item.speaker_id === "PM"
+                ? "assistant"
+                : "user"
+            ) as "assistant" | "user";
+            const messageId = `${role}:${item.message.substring(0, 100)}`;
+            return !seenMessages.has(messageId);
+          })
+          .map((item) => ({
+            role: (item.speaker_id === "assistant" || item.speaker_id === "PM"
+              ? "assistant"
+              : "user") as "assistant" | "user",
+            content: item.message,
+          }));
+
+        // Insert chat history at the beginning of messages array
+        messages = [...chatHistory, ...messages];
+        console.log(
+          "Added chat history to messages:",
+          chatHistory.length,
+          "messages"
+        );
+      }
+    }
+
     // If context should be included, fetch relevant documents from vector store
     if (includeContext && messages.length > 0 && openaiKey) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,7 +125,7 @@ export async function POST(request: Request) {
             "match_documents",
             {
               query_embedding: embedding,
-              match_threshold: 0.7, // Lower threshold to get more matches
+              match_threshold: 0.7,
               match_count: 5,
             }
           );
@@ -99,28 +148,29 @@ export async function POST(request: Request) {
     }
 
     // Add context to system prompt if available
-    let enhancedSystem = system || "";
+    let enhancedSystem =
+      system ||
+      `You are a helpful AI assistant. You have access to the entire conversation history in the messages array. Each message contains the complete text of what was said.
+
+When asked about previous conversations, you should:
+1. Look through all messages in the messages array
+2. Pay attention to both user and assistant messages
+3. Reference specific parts of previous conversations when answering questions
+4. If you find relevant previous conversations, summarize what was discussed
+5. If you don't find any relevant previous conversations, clearly state that you don't see any discussions about the topic in the messages
+
+Important: The messages array contains the COMPLETE conversation history. You do not need to look elsewhere for context.`;
+
     if (context.length > 0) {
       enhancedSystem = `${enhancedSystem}\n\nRelevant context from our knowledge base:\n${context.join(
         "\n\n"
       )}\n\nPlease use this context to provide accurate and relevant information about our system.`;
     }
 
-    // Transform messages to Anthropic's format
-    const transformedMessages = messages.map((msg) => ({
-      role: msg.role,
-      content: [
-        {
-          type: "text",
-          text: msg.content,
-        },
-      ],
-    }));
-
     const requestBody = {
-      messages: transformedMessages,
+      messages,
       system: enhancedSystem || undefined,
-      model: model || DEFAULT_MODEL,
+      model: model || "claude-3-sonnet-20240229",
       max_tokens: 1024,
     };
 
@@ -171,10 +221,8 @@ export async function POST(request: Request) {
         const supabase = createClient(supabaseUrl, supabaseKey);
         console.log("Saving assistant response to chat history");
 
-        const content = data.content
-          .filter((item: ContentItem) => item.type === "text")
-          .map((item: ContentItem) => item.text)
-          .join("");
+        // Extract text content from the response
+        const content = data.content[0]?.text || "";
 
         const { error: saveError } = await supabase
           .from("chat_histories")
@@ -199,19 +247,10 @@ export async function POST(request: Request) {
     }
 
     // Transform the response to match our expected format
-    if (data.content && Array.isArray(data.content)) {
-      const content = data.content
-        .filter((item: ContentItem) => item.type === "text")
-        .map((item: ContentItem) => item.text)
-        .join("");
-
-      return NextResponse.json({
-        ...data,
-        content,
-      });
-    }
-
-    return NextResponse.json(data);
+    return NextResponse.json({
+      ...data,
+      content: data.content[0]?.text || "",
+    });
   } catch (error) {
     console.error("Anthropic API error:", error);
     const errorMessage =

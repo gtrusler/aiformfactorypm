@@ -4,9 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export interface AnthropicConfig {
   apiKey?: string;
   model?: string;
-  baseUrl?: string;
-  supabaseUrl?: string;
-  supabaseKey?: string;
+  supabase?: any;
 }
 
 export interface Message {
@@ -34,20 +32,14 @@ interface EmbeddingResponse {
 }
 
 export class AnthropicClient {
-  private readonly baseUrl: string;
-  private readonly apiKey?: string;
-  private readonly defaultModel: string;
-  private readonly supabase: any;
+  private baseUrl: string;
+  private defaultModel: string;
+  private supabase: any;
 
-  constructor(config: AnthropicConfig = {}) {
-    const baseUrl = getBaseUrl();
-    this.baseUrl = config.baseUrl || `${baseUrl}/api/anthropic`;
-    this.apiKey = config.apiKey;
-    this.defaultModel = config.model || "claude-3-5-sonnet-20241022";
-
-    if (config.supabaseUrl && config.supabaseKey) {
-      this.supabase = createClient(config.supabaseUrl, config.supabaseKey);
-    }
+  constructor(config?: AnthropicConfig) {
+    this.baseUrl = "/api/anthropic";
+    this.defaultModel = "claude-3-sonnet-20240229";
+    this.supabase = config?.supabase;
   }
 
   async createMessage(params: {
@@ -86,10 +78,20 @@ export class AnthropicClient {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
           messages: params.messages,
-          system: params.system,
+          system: `You are a helpful AI assistant. You have access to the entire conversation history in the messages array. Each message contains the complete text of what was said.
+
+When asked about previous conversations, you should:
+1. Look through all messages in the messages array
+2. Pay attention to both user and assistant messages
+3. Reference specific parts of previous conversations when answering questions
+4. If you find relevant previous conversations, summarize what was discussed
+5. If you don't find any relevant previous conversations, clearly state that you don't see any discussions about the topic in the messages
+
+Important: The messages array contains the COMPLETE conversation history. You do not need to look elsewhere for context.`,
           model: params.model || this.defaultModel,
           context,
           threadId: params.threadId,
@@ -102,15 +104,9 @@ export class AnthropicClient {
       }
 
       const messageResponse = await response.json();
-
-      // Save to chat history if threadId is provided and Supabase is configured
-      if (params.threadId && this.supabase) {
-        await this.saveToChatHistory(messageResponse, params.threadId);
-      }
-
       return messageResponse;
     } catch (error) {
-      console.error("Anthropic API error:", error);
+      console.error("Error in createMessage:", error);
       throw error;
     }
   }

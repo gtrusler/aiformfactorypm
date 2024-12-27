@@ -2,7 +2,17 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import config from "@/config";
 import { addPlanToCustomer } from "@/app/utils/lemon-squeezy-supabase-admin";
-import type { Plan } from "@/types/plans";
+
+interface Plan {
+  isFeatured?: boolean;
+  variantId: number;
+  name: string;
+  description?: string;
+  duration?: string;
+  freeDuration?: string;
+  price: number;
+  features: { name: string }[];
+}
 
 interface LemonSqueezyWebhookEvent {
   meta: {
@@ -28,7 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const variantId = event.data.attributes.variant_id;
       const userId = event.meta.custom_data.user_id;
       const plan = config.lemonsqueezy.plans.find(
-        (p: Plan) => p.variantId === variantId
+        (p) => p.variantId === variantId
       );
 
       if (!plan) {

@@ -24,19 +24,29 @@ The system uses a Multi-Context Processing approach to enhance chat responses:
    - Configurable relevance thresholds
    - Returns top matching documents
 
-4. **Chat Processing**
-   - Uses Claude 3.5 Sonnet model
+4. **Chat History Management**
+
+   - Stores complete conversation history in Supabase
+   - Implements message deduplication
+   - Formats history for AI consumption
+   - Maintains thread-based conversations
+
+5. **Chat Processing**
+
+   - Uses Claude 3 Sonnet model
    - Enhances prompts with relevant context
-   - Maintains chat history in Supabase
+   - Integrates chat history seamlessly
+   - Maintains consistent system prompts
 
 ## Data Flow
 
 1. User sends a message
-2. System generates embedding for the message
-3. Vector store returns relevant context
-4. Context is added to system prompt
-5. Enhanced prompt sent to Claude
-6. Response stored in chat history
+2. System retrieves chat history from Supabase
+3. System generates embedding for the message
+4. Vector store returns relevant context
+5. Chat history and context are added to system prompt
+6. Enhanced prompt sent to Claude
+7. Response stored in chat history
 
 ## Components
 
@@ -45,18 +55,28 @@ The system uses a Multi-Context Processing approach to enhance chat responses:
 - Handles chat message processing
 - Manages context inclusion
 - Interfaces with Supabase
+- Maintains consistent system prompts
+
+### MessageHandler
+
+- Processes incoming messages
+- Retrieves and formats chat history
+- Integrates vector store context
+- Handles message deduplication
+
+### ChatInterface
+
+- Manages user interactions
+- Displays message history
+- Handles file attachments
+- Provides real-time feedback
 
 ### Vector Store
 
 - Stores document embeddings
-- Provides similarity search
-- Maintains document metadata
-
-### Chat Interface
-
-- Handles user interactions
-- Displays messages and responses
-- Manages chat state
+- Provides semantic search
+- Manages metadata
+- Handles batch operations
 
 ## Deployment
 
