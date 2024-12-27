@@ -19,6 +19,12 @@
   - Base64 encoding for images
   - Type-safe message metadata
   - Proper TypeScript integration
+- AI System Prompt Enhancement
+  - Major components breakdown
+  - Communication style guidelines
+  - AI Code Assistant Prompting Framework
+  - Task sizing strategies
+  - Type-first development approach
 
 #### 🚧 In Progress
 
@@ -88,6 +94,43 @@
 - Added type declarations for message attachments
 - Used TypeScript declaration merging for extending types
 
+### AI Prompting Framework Implementation
+
+#### Core Principles
+
+- Complexity Balance Rule: Task size inversely proportional to codebase complexity
+- Detail Level Scaling: More complex codebases require more detailed prompts
+- Two-Iteration Rule: Aim for success within two iterations
+
+#### Task Sizing Strategy
+
+- Evaluate based on:
+  - Number of files to modify
+  - Dependencies involved
+  - Integration points
+  - State management complexity
+  - Error handling requirements
+
+#### Context Management
+
+- Start fresh for:
+  - Major logical errors
+  - Wrong framework/library usage
+  - Fundamental approach changes
+  - Extended conversations (3-4+ iterations)
+- Continue session for:
+  - Minor tweaks
+  - Style adjustments
+  - Small feature additions
+  - Bug fixes
+
+#### Type-First Development
+
+- Define interfaces/types before implementation
+- Share types in prompts
+- Use explicit return types
+- Leverage type inference
+
 ## Patterns
 
 ### State Management
@@ -137,6 +180,38 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 ```
 
+### AI Prompt Structure
+
+```markdown
+Task Description:
+[Clear, concise description]
+
+Technical Context:
+
+- Framework/Libraries
+- File Locations
+- Dependencies
+
+Requirements:
+
+1. Specific requirements
+2. Constraints
+3. Expected behavior
+
+Additional Notes:
+
+- Edge cases
+- Special considerations
+- Documentation links
+```
+
+### Progressive Enhancement
+
+1. Basic functionality first
+2. Add error handling
+3. Implement edge cases
+4. Optimize performance
+
 ## Performance Insights
 
 - Chat interface renders efficiently
@@ -173,3 +248,26 @@ const fileToBase64 = (file: File): Promise<string> => {
 ### FileReader API for file processing
 
 - Lucide React for file type icons
+
+### AI Integration
+
+- Claude 3 Sonnet (claude-3-sonnet-20240229)
+- Vector store for context
+- AI Code Assistant Framework
+
+## Best Practices
+
+### AI Prompting
+
+- Keep tasks focused and appropriately sized
+- Provide necessary context without overload
+- Use type-first development approach
+- Document successful prompt patterns
+- Regular review and refinement
+
+### Code Quality
+
+- Type safety first
+- Consistent error handling
+- Performance considerations
+- Security best practices

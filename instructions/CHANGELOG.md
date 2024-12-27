@@ -54,6 +54,12 @@ All notable changes to this project will be documented in this file.
 - Modified chat API routes for context inclusion
 - Updated message handler to include relevant context from vector store
 - Moved vector operations to server-side to protect API keys
+- Updated AI system prompt with new project structure and prompting framework
+  - Added major components breakdown
+  - Enhanced communication style guidelines
+  - Included comprehensive AI Code Assistant Prompting Framework
+  - Updated tech stack and roles
+  - Added detailed task sizing and implementation strategies
 
 ### Fixed
 
