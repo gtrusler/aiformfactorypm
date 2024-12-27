@@ -1,6 +1,6 @@
 # Technical Learnings
 
-## Current Status (as of [DATE])
+## Current Status (as of [2024-12-27])
 
 ### Implementation Status
 
@@ -25,6 +25,11 @@
   - AI Code Assistant Prompting Framework
   - Task sizing strategies
   - Type-first development approach
+- Basic chat interface with message history
+- Supabase integration for message storage
+- Chat history retrieval and formatting
+- System prompt framework for AI project management
+- Message deduplication in chat history
 
 #### 🚧 In Progress
 
@@ -34,6 +39,9 @@
 - Payment processing integration
 - Advanced template management system
 - Document generation pipeline
+- Testing Supabase-Docassemble integration
+- Document generation from Supabase data
+- RAG chatbot implementation
 
 ### Immediate Next Steps
 
@@ -47,6 +55,10 @@
 8. Add support for more file types
 9. Implement file compression for large images
 10. Add progress indicators for file uploads
+11. Create test Supabase table for document generation
+12. Set up Docassemble connection to Supabase
+13. Implement basic document template
+14. Test data flow from Supabase to generated document
 
 ### Testing Checklist
 
@@ -63,6 +75,10 @@
 - [ ] Test multiple file uploads
 - [ ] Verify file type restrictions
 - [ ] Test error handling scenarios
+- [ ] Supabase table creation and data insertion
+- [ ] Docassemble-Supabase connection
+- [ ] Basic document generation
+- [ ] Data flow validation
 
 ## Solutions
 
@@ -221,6 +237,10 @@ Additional Notes:
 - Consider implementing file compression
 - May need to add file size limits
 - Consider chunked upload for large files
+- Message deduplication reduces context size
+- Structured message format improves parsing efficiency
+- Proper error handling prevents cascading failures
+- Clear system prompts reduce confusion and rework
 
 ## Tools and Libraries
 
@@ -254,6 +274,20 @@ Additional Notes:
 - Claude 3 Sonnet (claude-3-sonnet-20240229)
 - Vector store for context
 - AI Code Assistant Framework
+
+### Core Stack
+
+- Next.js for frontend framework
+- Supabase for database and auth
+- Claude API for AI interactions
+- Docassemble for document generation
+
+### Development Tools
+
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Shadcn for UI components
+- Conda for environment management
 
 ## Best Practices
 
